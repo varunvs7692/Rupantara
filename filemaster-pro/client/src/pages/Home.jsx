@@ -21,38 +21,44 @@ export default function Home() {
           <img src="/logo.png" alt="Rupantara Logo" className="w-64 h-64 object-contain" />
         </div>
       </div>
-      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-4 gap-6 mt-12">
-        <FeatureCard
-          icon={<span className="text-4xl">💾</span>}
-          title="File Compression"
-          desc="Reduce file size without losing quality. Supports PDF, DOCX, PPT, ZIP."
-        />
-        <FeatureCard
-          icon={<span className="text-4xl">📄</span>}
-          title="File to PDF"
-          desc="Convert documents and images into high-quality PDFs in seconds."
-        />
-        <FeatureCard
-          icon={<span className="text-4xl">🖼️</span>}
-          title="Image Compression"
-          desc="Compress images while keeping them sharp and clear."
-        />
-        <FeatureCard
-          icon={<span className="text-4xl">🔵HD</span>}
-          title="Image HD Enhancement"
-          desc="AI-powered image upscaling for crystal clear HD images."
-        />
+      <div className="w-full max-w-5xl mt-12">
+        <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">All tools</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+          <ToolButton href="/file-compression" label="File Compression" />
+          <ToolButton href="/pdf-converter" label="File to PDF" />
+          <ToolButton href="/image-tools" label="Image Tools" />
+          {/* PDF tools */}
+          <ToolButton href="/pdf/remove-pages" label="Remove Pages" />
+          <ToolButton href="/pdf/extract-pages" label="Extract Pages" />
+          <ToolButton href="/pdf/organize" label="Organize PDF" />
+          <ToolButton href="/pdf/scan" label="Scan to PDF" />
+          <ToolButton href="/pdf/repair" label="Repair PDF" />
+          <ToolButton href="/pdf/ocr" label="OCR PDF" />
+          <ToolButton href="/pdf/to-pdfa" label="PDF to PDF/A" />
+          <ToolButton href="/pdf/rotate" label="Rotate PDF" />
+          <ToolButton href="/pdf/add-page-numbers" label="Add Page Numbers" />
+          <ToolButton href="/pdf/add-watermark" label="Add Watermark" />
+          <ToolButton href="/pdf/crop" label="Crop PDF" />
+          <ToolButton href="/pdf/edit" label="Edit PDF" />
+          <ToolButton href="/pdf/unlock" label="Unlock PDF" />
+          <ToolButton href="/pdf/protect" label="Protect PDF" />
+          <ToolButton href="/pdf/sign" label="Sign PDF" />
+          <ToolButton href="/pdf/redact" label="Redact PDF" />
+          <ToolButton href="/pdf/compare" label="Compare PDF" />
+        </div>
       </div>
     </div>
   );
 }
 
-function FeatureCard({ icon, title, desc }) {
+function ToolButton({ href, label }) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 flex flex-col items-center text-center border border-gray-100 dark:border-gray-700">
-      <div className="mb-3">{icon}</div>
-      <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">{title}</h3>
-      <p className="text-gray-600 dark:text-gray-300 text-sm">{desc}</p>
-    </div>
+    <a
+      href={href}
+      className="w-full inline-flex items-center justify-between gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-gray-900 dark:text-white shadow-sm hover:shadow-md transition"
+    >
+      <span className="font-semibold">{label}</span>
+      <span className="text-sm text-gray-500 dark:text-gray-400">Open</span>
+    </a>
   );
 }
