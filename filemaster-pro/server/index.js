@@ -41,6 +41,9 @@ app.get('/api/health', (req, res) => {
 // API routes
 app.use('/api/compress', require('./routes/compression'));
 app.use('/api/pdf', require('./routes/pdf'));
+app.use('/api/pdf-advanced', require('./routes/pdf-advanced'));
+app.use('/api/pdf-tools', require('./routes/pdf-tools'));
+app.use('/api/convert-libreoffice', require('./routes/convert-libreoffice'));
 app.use('/api/image', require('./routes/image'));
 
 app.listen(PORT, () => {

@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: filemaster-server
+    env: node
+    plan: free
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+    autoDeploy: true
+    rootDir: .
+    buildFilter:
+      paths:
+        - server/**
+  - type: web
+    name: filemaster-client
+    env: node
+    plan: free
+    buildCommand: cd client && npm install && npm run build
+    startCommand: cd client && npm run preview -- --port $PORT
+    envVars:
+      - key: NODE_ENV
+        value: production
+    autoDeploy: true
+    rootDir: .
+    buildFilter:
+      paths:
+        - client/**
