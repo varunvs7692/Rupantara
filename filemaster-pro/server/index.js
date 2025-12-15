@@ -3,6 +3,7 @@ const multer = require('multer');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const { exec } = require('child_process');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -25,6 +26,15 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Log presence of LibreOffice in the Docker image for sanity checks
+exec('which soffice && soffice --version', (err, stdout, stderr) => {
+  if (err) {
+    console.warn('[startup] soffice not available:', stderr || err.message);
+  } else {
+    console.log('[startup] soffice detected:', (stdout || '').trim());
+  }
+});
 
 // Multer setup
 const upload = multer({
