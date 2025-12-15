@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiFetch } from '../../api';
 
 export default function MergePDF() {
   const [files, setFiles] = useState([]);
@@ -21,7 +22,7 @@ export default function MergePDF() {
     const formData = new FormData();
     files.forEach(f => formData.append('files', f));
     try {
-      const res = await fetch('/api/pdf-advanced/merge', { method: 'POST', body: formData });
+      const res = await apiFetch('/api/pdf-advanced/merge', { method: 'POST', body: formData });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || 'Merge failed');

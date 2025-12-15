@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiFetch } from '../../api'; // Ensure apiFetch import (no-op if already present)
 export default function ComparePDF() {
   const [files, setFiles] = useState([]);
   const [result, setResult] = useState(null);
@@ -20,7 +21,7 @@ export default function ComparePDF() {
     const formData = new FormData();
     files.forEach(f => formData.append('files', f));
     try {
-      const res = await fetch('/api/pdf-tools/compare', {
+      const res = await apiFetch('/api/pdf-tools/compare', {
         method: 'POST',
         body: formData
       });

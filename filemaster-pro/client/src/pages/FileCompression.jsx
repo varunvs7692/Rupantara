@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiFetch } from '../api';
 
 export default function FileCompression() {
   const [file, setFile] = useState(null);
@@ -22,7 +23,7 @@ export default function FileCompression() {
     formData.append('level', level);
     try {
       setProgress(30);
-      const res = await fetch('/api/compress', {
+      const res = await apiFetch('/api/compress', {
         method: 'POST',
         body: formData
       });

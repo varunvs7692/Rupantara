@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiFetch } from '../../api';
 export default function RepairPDF() {
   const [file, setFile] = useState(null);
   const [downloadUrl, setDownloadUrl] = useState('');
@@ -20,7 +21,7 @@ export default function RepairPDF() {
     const formData = new FormData();
     formData.append('file', file);
     try {
-      const res = await fetch('/api/pdf-tools/repair', {
+      const res = await apiFetch('/api/pdf-tools/repair', {
         method: 'POST',
         body: formData
       });

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiFetch } from '../../api';
 export default function UnlockPDF() {
   const [file, setFile] = useState(null);
   const [password, setPassword] = useState('');
@@ -22,7 +23,7 @@ export default function UnlockPDF() {
     formData.append('file', file);
     formData.append('password', password);
     try {
-      const res = await fetch('/api/pdf-tools/unlock', {
+      const res = await apiFetch('/api/pdf-tools/unlock', {
         method: 'POST',
         body: formData
       });

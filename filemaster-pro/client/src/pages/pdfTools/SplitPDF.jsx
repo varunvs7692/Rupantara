@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiFetch } from '../../api';
 
 export default function SplitPDF() {
   const [file, setFile] = useState(null);
@@ -23,7 +24,7 @@ export default function SplitPDF() {
     formData.append('file', file);
     formData.append('pages', pages);
     try {
-      const res = await fetch('/api/pdf-advanced/split', { method: 'POST', body: formData });
+      const res = await apiFetch('/api/pdf-advanced/split', { method: 'POST', body: formData });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || 'Split failed');

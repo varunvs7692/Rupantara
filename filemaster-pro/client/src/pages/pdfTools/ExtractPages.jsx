@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiFetch } from '../../api';
 export default function ExtractPages() {
   const [file, setFile] = useState(null);
   const [downloadUrl, setDownloadUrl] = useState('');
@@ -22,7 +23,7 @@ export default function ExtractPages() {
     formData.append('file', file);
     formData.append('pages', pages);
     try {
-      const res = await fetch('/api/pdf-tools/extract-pages', {
+      const res = await apiFetch('/api/pdf-tools/extract-pages', {
         method: 'POST',
         body: formData
       });

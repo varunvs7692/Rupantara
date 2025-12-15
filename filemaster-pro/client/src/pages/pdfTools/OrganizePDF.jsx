@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiFetch } from '../../api';
 export default function OrganizePDF() {
   const [file, setFile] = useState(null);
   const [downloadUrl, setDownloadUrl] = useState('');
@@ -22,7 +23,7 @@ export default function OrganizePDF() {
     formData.append('file', file);
     formData.append('order', order);
     try {
-      const res = await fetch('/api/pdf-tools/organize', {
+      const res = await apiFetch('/api/pdf-tools/organize', {
         method: 'POST',
         body: formData
       });

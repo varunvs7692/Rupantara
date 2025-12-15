@@ -8,9 +8,3 @@ A modern web application for file compression, PDF conversion, and advanced imag
 - Image Compression & AI Enhancement
 - Clean, modern UI (React.js + Tailwind CSS)
 - Node.js + Express.js backend
-
-## Installation
-See below for setup instructions.
-
-## Sample Screenshots
-See `/sample-screenshots` (placeholders).

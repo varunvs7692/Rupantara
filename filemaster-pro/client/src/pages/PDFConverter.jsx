@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiFetch } from '../api';
 
 export default function PDFConverter() {
   const [file, setFile] = useState(null);
@@ -27,7 +28,7 @@ export default function PDFConverter() {
     try {
       setProgress(30);
       const endpoint = isOffice ? '/api/convert-libreoffice' : '/api/pdf/convert';
-      const res = await fetch(endpoint, {
+      const res = await apiFetch(endpoint, {
         method: 'POST',
         body: formData
       });

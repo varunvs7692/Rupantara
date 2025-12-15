@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiFetch } from '../../api';
 export default function RotatePDF() {
   const [file, setFile] = useState(null);
   const [downloadUrl, setDownloadUrl] = useState('');
@@ -24,7 +25,7 @@ export default function RotatePDF() {
     formData.append('angle', angle);
     formData.append('pages', pages);
     try {
-      const res = await fetch('/api/pdf-tools/rotate', {
+      const res = await apiFetch('/api/pdf-tools/rotate', {
         method: 'POST',
         body: formData
       });

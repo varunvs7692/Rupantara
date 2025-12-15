@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiFetch } from '../../api';
 export default function AddWatermark() {
   const [file, setFile] = useState(null);
   const [downloadUrl, setDownloadUrl] = useState('');
@@ -22,7 +23,7 @@ export default function AddWatermark() {
     formData.append('file', file);
     formData.append('text', text);
     try {
-      const res = await fetch('/api/pdf-tools/add-watermark', {
+      const res = await apiFetch('/api/pdf-tools/add-watermark', {
         method: 'POST',
         body: formData
       });

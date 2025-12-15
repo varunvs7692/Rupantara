@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiFetch } from '../api';
 
 export default function ImageTools() {
   const [file, setFile] = useState(null);
@@ -28,7 +29,7 @@ export default function ImageTools() {
     formData.append('quality', quality);
     try {
       setProgress(30);
-      const res = await fetch('/api/image/compress', {
+      const res = await apiFetch('/api/image/compress', {
         method: 'POST',
         body: formData
       });
@@ -55,7 +56,7 @@ export default function ImageTools() {
     formData.append('scale', enhanceScale);
     try {
       setProgress(30);
-      const res = await fetch('/api/image/enhance', {
+      const res = await apiFetch('/api/image/enhance', {
         method: 'POST',
         body: formData
       });

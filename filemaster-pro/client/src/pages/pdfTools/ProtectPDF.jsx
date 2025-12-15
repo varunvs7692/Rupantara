@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiFetch } from '../../api';
 export default function ProtectPDF() {
   const [file, setFile] = useState(null);
   const [password, setPassword] = useState('');
@@ -22,7 +23,7 @@ export default function ProtectPDF() {
     formData.append('file', file);
     formData.append('password', password);
     try {
-      const res = await fetch('/api/pdf-tools/protect', {
+      const res = await apiFetch('/api/pdf-tools/protect', {
         method: 'POST',
         body: formData
       });

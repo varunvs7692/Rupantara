@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiFetch } from '../../api';
 export default function SignPDF() {
   const [file, setFile] = useState(null);
   const [downloadUrl, setDownloadUrl] = useState('');
@@ -20,7 +21,7 @@ export default function SignPDF() {
     const formData = new FormData();
     formData.append('file', file);
     try {
-      const res = await fetch('/api/pdf-tools/sign', {
+      const res = await apiFetch('/api/pdf-tools/sign', {
         method: 'POST',
         body: formData
       });

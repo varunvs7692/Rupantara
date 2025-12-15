@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiFetch } from '../../api';
 export default function CropPDF() {
   const [file, setFile] = useState(null);
   const [downloadUrl, setDownloadUrl] = useState('');
@@ -22,7 +23,7 @@ export default function CropPDF() {
     formData.append('file', file);
     formData.append('inset', inset);
     try {
-      const res = await fetch('/api/pdf-tools/crop', {
+      const res = await apiFetch('/api/pdf-tools/crop', {
         method: 'POST',
         body: formData
       });
