@@ -1,4 +1,5 @@
-const rawBase = (import.meta.env?.VITE_API_BASE || '').replace(/\/$/, '');
+const fallbackBase = 'https://rupantara-backend.onrender.com';
+const rawBase = (import.meta.env?.VITE_API_BASE || fallbackBase).replace(/\/$/, '');
 
 if (!rawBase) {
   // Fail fast in production if the API base is not configured
