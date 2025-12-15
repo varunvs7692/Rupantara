@@ -8,6 +8,7 @@ export default function ImageTools() {
   const [error, setError] = useState('');
   const [origSize, setOrigSize] = useState(null);
   const [compSize, setCompSize] = useState(null);
+  const [enhanceScale, setEnhanceScale] = useState(1.5);
 
   const handleFileChange = e => {
     const f = e.target.files[0];
@@ -43,10 +44,34 @@ export default function ImageTools() {
     }
   };
 
-  // Placeholder for AI enhancement
   const handleEnhance = async e => {
     e.preventDefault();
-    setError('AI upscaling is not available in this demo.');
+    if (!file) return;
+    setProgress(10);
+    setError('');
+    setDownloadUrl('');
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('scale', enhanceScale);
+    try {
+      setProgress(30);
+      const res = await fetch('/api/image/enhance', {
+        method: 'POST',
+        body: formData
+      });
+      setProgress(70);
+      if (!res.ok) {
+        const { error: apiError } = await res.json().catch(() => ({ error: 'Enhancement failed' }));
+        throw new Error(apiError || 'Enhancement failed');
+      }
+      const blob = await res.blob();
+      setDownloadUrl(URL.createObjectURL(blob));
+      setCompSize(blob.size);
+      setProgress(100);
+    } catch (err) {
+      setError(err.message);
+      setProgress(0);
+    }
   };
 
   return (
@@ -60,7 +85,12 @@ export default function ImageTools() {
           <span>{quality}%</span>
         </div>
         <button onClick={handleCompress} className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">Compress Image</button>
-        <button onClick={handleEnhance} className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 ml-2">Enhance (AI HD)</button>
+        <div className="flex items-center gap-3 mt-2">
+          <label>Enhance scale:</label>
+          <input type="range" min="1" max="3" step="0.1" value={enhanceScale} onChange={e => setEnhanceScale(e.target.value)} />
+          <span>{enhanceScale}x</span>
+          <button onClick={handleEnhance} className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">Enhance</button>
+        </div>
       </form>
       {progress > 0 && (
         <div className="w-full bg-gray-200 rounded h-2 mt-4">
