@@ -1,13 +1,9 @@
 services:
   - type: web
     name: filemaster-server
-    env: node
+    env: docker
     plan: free
-    buildCommand: cd server && npm install
-    startCommand: cd server && npm start
-    envVars:
-      - key: NODE_ENV
-        value: production
+    dockerfilePath: server/Dockerfile
     autoDeploy: true
     rootDir: .
     buildFilter:

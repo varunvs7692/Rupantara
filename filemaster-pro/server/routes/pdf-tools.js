@@ -3,6 +3,9 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { PDFDocument, rgb, degrees, StandardFonts } = require('pdf-lib');
+const util = require('util');
+const { exec } = require('child_process');
+const execAsync = util.promisify(exec);
 const router = express.Router();
 
 const upload = multer({ dest: path.join(__dirname, '../uploads') });
@@ -141,14 +144,45 @@ router.post('/repair', upload.single('file'), async (req, res) => {
   }
 });
 
-// OCR PDF (placeholder)
+// OCR PDF (single page) using tesseract + poppler
 router.post('/ocr', upload.single('file'), async (req, res) => {
-  res.status(501).json({ error: 'OCR requires Tesseract; not available in this deployment.' });
+  try {
+    const file = req.file;
+    if (!file) return res.status(400).json({ error: 'No PDF uploaded.' });
+    const base = path.join(__dirname, '../uploads', file.filename);
+    const imgBase = `${base}-page`;
+    const outPdf = `${base}-ocr.pdf`;
+    // Convert first page to PNG
+    await execAsync(`pdftoppm -png -f 1 -singlefile "${file.path}" "${imgBase}"`);
+    // Run tesseract to searchable PDF
+    await execAsync(`tesseract "${imgBase}.png" "${base}-ocr" pdf`);
+    if (!fs.existsSync(outPdf)) {
+      // tesseract outputs with .pdf suffix
+      const generated = `${base}-ocr.pdf`;
+      if (!fs.existsSync(generated)) throw new Error('OCR output missing');
+    }
+    res.download(outPdf, 'ocr.pdf', () => {
+      [file.path, `${imgBase}.png`, outPdf, `${base}-ocr.txt`].forEach(p => fs.existsSync(p) && fs.unlinkSync(p));
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// PDF to PDF/A (placeholder)
+// PDF to PDF/A using Ghostscript
 router.post('/to-pdfa', upload.single('file'), async (req, res) => {
-  res.status(501).json({ error: 'PDF/A conversion not available in this deployment.' });
+  try {
+    const file = req.file;
+    if (!file) return res.status(400).json({ error: 'No PDF uploaded.' });
+    const outPath = path.join(__dirname, '../uploads', `${file.filename}-pdfa.pdf`);
+    const cmd = `gs -dPDFA=2 -dBATCH -dNOPAUSE -dNOOUTERSAVE -sPROCESSCOLORMODEL=DeviceRGB -sDEVICE=pdfwrite -sOutputFile="${outPath}" -sPDFACompatibilityPolicy=1 "${file.path}"`;
+    await execAsync(cmd);
+    res.download(outPath, 'pdfa.pdf', () => {
+      [file.path, outPath].forEach(p => fs.existsSync(p) && fs.unlinkSync(p));
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Rotate PDF
@@ -256,34 +290,125 @@ router.post('/crop', upload.single('file'), async (req, res) => {
   }
 });
 
-// Edit PDF (placeholder)
+// Edit PDF (add footer text)
 router.post('/edit', upload.single('file'), async (req, res) => {
-  res.status(501).json({ error: 'Edit PDF not available in this deployment.' });
+  try {
+    const file = req.file;
+    const note = req.body.note || 'Edited by Rupantara';
+    if (!file) return res.status(400).json({ error: 'No PDF uploaded.' });
+    const pdfBytes = fs.readFileSync(file.path);
+    const pdfDoc = await PDFDocument.load(pdfBytes);
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    pdfDoc.getPages().forEach(page => {
+      const { width } = page.getSize();
+      const textWidth = font.widthOfTextAtSize(note, 10);
+      page.drawText(note, { x: width - textWidth - 20, y: 20, size: 10, font, color: rgb(0.2, 0.2, 0.2) });
+    });
+    const out = await pdfDoc.save();
+    const outPath = path.join(__dirname, '../uploads', `${file.filename}-edited.pdf`);
+    fs.writeFileSync(outPath, out);
+    downloadAndCleanup(res, [outPath, file.path], 'edited.pdf');
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// Unlock PDF (placeholder)
+// Unlock PDF via qpdf
 router.post('/unlock', upload.single('file'), async (req, res) => {
-  res.status(501).json({ error: 'Unlocking password-protected PDFs requires qpdf; not available here.' });
+  try {
+    const file = req.file;
+    const password = req.body.password || '';
+    if (!file) return res.status(400).json({ error: 'No PDF uploaded.' });
+    if (!password) return res.status(400).json({ error: 'Password required to unlock.' });
+    const outPath = path.join(__dirname, '../uploads', `${file.filename}-unlocked.pdf`);
+    await execAsync(`qpdf --password=${password} --decrypt "${file.path}" "${outPath}"`);
+    res.download(outPath, 'unlocked.pdf', () => {
+      [file.path, outPath].forEach(p => fs.existsSync(p) && fs.unlinkSync(p));
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// Protect PDF (placeholder)
+// Protect PDF via qpdf
 router.post('/protect', upload.single('file'), async (req, res) => {
-  res.status(501).json({ error: 'Setting PDF passwords requires qpdf; not available here.' });
+  try {
+    const file = req.file;
+    const password = req.body.password || '';
+    if (!file) return res.status(400).json({ error: 'No PDF uploaded.' });
+    if (!password) return res.status(400).json({ error: 'Password required to protect PDF.' });
+    const outPath = path.join(__dirname, '../uploads', `${file.filename}-protected.pdf`);
+    await execAsync(`qpdf --encrypt ${password} ${password} 256 -- "${file.path}" "${outPath}"`);
+    res.download(outPath, 'protected.pdf', () => {
+      [file.path, outPath].forEach(p => fs.existsSync(p) && fs.unlinkSync(p));
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// Sign PDF (placeholder)
+// Sign PDF (visual stamp, not cryptographic)
 router.post('/sign', upload.single('file'), async (req, res) => {
-  res.status(501).json({ error: 'Digital signing requires certificate support; not available here.' });
+  try {
+    const file = req.file;
+    const signer = req.body.signer || 'Rupantara';
+    if (!file) return res.status(400).json({ error: 'No PDF uploaded.' });
+    const pdfBytes = fs.readFileSync(file.path);
+    const pdfDoc = await PDFDocument.load(pdfBytes);
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const text = `Signed by ${signer}`;
+    pdfDoc.getPages().forEach(page => {
+      const { width } = page.getSize();
+      page.drawText(text, { x: width - 180, y: 40, size: 12, font, color: rgb(0, 0.2, 0.6) });
+    });
+    const out = await pdfDoc.save();
+    const outPath = path.join(__dirname, '../uploads', `${file.filename}-signed.pdf`);
+    fs.writeFileSync(outPath, out);
+    downloadAndCleanup(res, [outPath, file.path], 'signed.pdf');
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// Redact PDF (placeholder)
+// Redact PDF (black bar at top margin)
 router.post('/redact', upload.single('file'), async (req, res) => {
-  res.status(501).json({ error: 'Redaction not available in this deployment.' });
+  try {
+    const file = req.file;
+    if (!file) return res.status(400).json({ error: 'No PDF uploaded.' });
+    const heightPx = Math.max(parseInt(req.body.height || '50', 10), 10);
+    const pdfBytes = fs.readFileSync(file.path);
+    const pdfDoc = await PDFDocument.load(pdfBytes);
+    pdfDoc.getPages().forEach(page => {
+      const { width, height } = page.getSize();
+      page.drawRectangle({ x: 0, y: height - heightPx, width, height: heightPx, color: rgb(0, 0, 0) });
+    });
+    const out = await pdfDoc.save();
+    const outPath = path.join(__dirname, '../uploads', `${file.filename}-redacted.pdf`);
+    fs.writeFileSync(outPath, out);
+    downloadAndCleanup(res, [outPath, file.path], 'redacted.pdf');
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// Compare PDF (placeholder)
-router.post('/compare', upload.single('file'), async (req, res) => {
-  res.status(501).json({ error: 'PDF diffing not available in this deployment.' });
+// Compare PDF (simple page count diff)
+router.post('/compare', upload.array('files', 2), async (req, res) => {
+  try {
+    const [a, b] = req.files || [];
+    if (!a || !b) return res.status(400).json({ error: 'Two PDF files required.' });
+    const aDoc = await PDFDocument.load(fs.readFileSync(a.path));
+    const bDoc = await PDFDocument.load(fs.readFileSync(b.path));
+    const result = {
+      pagesA: aDoc.getPageCount(),
+      pagesB: bDoc.getPageCount(),
+      equalPages: aDoc.getPageCount() === bDoc.getPageCount()
+    };
+    fs.unlinkSync(a.path);
+    fs.unlinkSync(b.path);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;

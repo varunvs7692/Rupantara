@@ -42,6 +42,7 @@ export default function OCRPDF() {
       <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">OCR PDF</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <input type="file" accept="application/pdf" onChange={handleFileChange} className="block w-full" />
+        <p className="text-xs text-gray-500 dark:text-gray-400">Runs OCR on the first page to produce a searchable PDF.</p>
         <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" disabled={loading}>
           {loading ? 'Processing...' : 'OCR PDF'}
         </button>
