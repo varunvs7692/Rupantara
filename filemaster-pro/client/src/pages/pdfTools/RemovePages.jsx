@@ -4,6 +4,7 @@ export default function RemovePages() {
   const [downloadUrl, setDownloadUrl] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [pages, setPages] = useState('');
 
   const handleFileChange = e => {
     setFile(e.target.files[0]);
@@ -19,6 +20,7 @@ export default function RemovePages() {
     setDownloadUrl('');
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('pages', pages);
     try {
       const res = await fetch('/api/pdf-tools/remove-pages', {
         method: 'POST',
@@ -42,6 +44,15 @@ export default function RemovePages() {
       <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Remove Pages from PDF</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <input type="file" accept="application/pdf" onChange={handleFileChange} className="block w-full" />
+        <label className="block text-sm text-gray-700 dark:text-gray-200">
+          Pages to remove (e.g., 1-2,5)
+          <input
+            type="text"
+            value={pages}
+            onChange={e => setPages(e.target.value)}
+            className="mt-1 w-full border rounded px-2 py-1"
+          />
+        </label>
         <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" disabled={loading}>
           {loading ? 'Processing...' : 'Remove Pages'}
         </button>

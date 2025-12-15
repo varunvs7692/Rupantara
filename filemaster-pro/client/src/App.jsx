@@ -24,6 +24,8 @@ import ProtectPDF from './pages/pdfTools/ProtectPDF';
 import SignPDF from './pages/pdfTools/SignPDF';
 import RedactPDF from './pages/pdfTools/RedactPDF';
 import ComparePDF from './pages/pdfTools/ComparePDF';
+import MergePDF from './pages/pdfTools/MergePDF';
+import SplitPDF from './pages/pdfTools/SplitPDF';
 
 function App() {
   return (
@@ -55,6 +57,8 @@ function App() {
             <Route path="/pdf/sign" element={<SignPDF />} />
             <Route path="/pdf/redact" element={<RedactPDF />} />
             <Route path="/pdf/compare" element={<ComparePDF />} />
+            <Route path="/pdf/merge" element={<MergePDF />} />
+            <Route path="/pdf/split" element={<SplitPDF />} />
           </Routes>
         </main>
       </div>

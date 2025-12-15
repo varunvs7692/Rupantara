@@ -14,10 +14,18 @@ router.post('/compress', upload.single('image'), async (req, res) => {
     const file = req.file;
     if (!file) return res.status(400).json({ error: 'No image uploaded' });
     const ext = path.extname(file.originalname).toLowerCase();
-    const outPath = path.join(__dirname, '../uploads', `${file.filename}-compressed${ext}`);
-    await sharp(file.path)
-      .jpeg({ quality: parseInt(quality) })
-      .toFile(outPath);
+    const format = ['.jpg', '.jpeg'].includes(ext) ? 'jpeg' : ['.png'].includes(ext) ? 'png' : 'webp';
+    const outExt = format === 'jpeg' ? '.jpg' : `.${format}`;
+    const outPath = path.join(__dirname, '../uploads', `${file.filename}-compressed${outExt}`);
+
+    const img = sharp(file.path);
+    if (format === 'jpeg') {
+      await img.jpeg({ quality: parseInt(quality) || 80 }).toFile(outPath);
+    } else if (format === 'png') {
+      await img.png({ quality: parseInt(quality) || 80, compressionLevel: 9 }).toFile(outPath);
+    } else {
+      await img.webp({ quality: parseInt(quality) || 80 }).toFile(outPath);
+    }
     const origSize = fs.statSync(file.path).size;
     const compSize = fs.statSync(outPath).size;
     res.download(outPath, `${path.parse(file.originalname).name}-compressed${ext}`, () => {

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-export default function AddWatermark() {
+
+export default function SplitPDF() {
   const [file, setFile] = useState(null);
+  const [pages, setPages] = useState('1');
   const [downloadUrl, setDownloadUrl] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [text, setText] = useState('Watermark');
 
   const handleFileChange = e => {
     setFile(e.target.files[0]);
@@ -20,15 +21,12 @@ export default function AddWatermark() {
     setDownloadUrl('');
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('text', text);
+    formData.append('pages', pages);
     try {
-      const res = await fetch('/api/pdf-tools/add-watermark', {
-        method: 'POST',
-        body: formData
-      });
+      const res = await fetch('/api/pdf-advanced/split', { method: 'POST', body: formData });
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to add watermark');
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Split failed');
       }
       const blob = await res.blob();
       setDownloadUrl(URL.createObjectURL(blob));
@@ -41,24 +39,24 @@ export default function AddWatermark() {
 
   return (
     <div className="max-w-lg mx-auto p-8">
-      <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Add Watermark to PDF</h2>
+      <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Split PDF</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <input type="file" accept="application/pdf" onChange={handleFileChange} className="block w-full" />
         <label className="block text-sm text-gray-700 dark:text-gray-200">
-          Watermark text
+          Pages to extract (e.g., 1-2,4)
           <input
             type="text"
-            value={text}
-            onChange={e => setText(e.target.value)}
+            value={pages}
+            onChange={e => setPages(e.target.value)}
             className="mt-1 w-full border rounded px-2 py-1"
           />
         </label>
         <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" disabled={loading}>
-          {loading ? 'Processing...' : 'Add Watermark'}
+          {loading ? 'Processing…' : 'Split'}
         </button>
       </form>
       {downloadUrl && (
-        <a href={downloadUrl} download className="block mt-4 text-green-600">Download PDF with Watermark</a>
+        <a href={downloadUrl} download className="block mt-4 text-green-600">Download Split PDF</a>
       )}
       {error && <div className="text-red-600 mt-2">{error}</div>}
     </div>

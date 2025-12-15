@@ -4,6 +4,7 @@ export default function CropPDF() {
   const [downloadUrl, setDownloadUrl] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [inset, setInset] = useState(20);
 
   const handleFileChange = e => {
     setFile(e.target.files[0]);
@@ -19,6 +20,7 @@ export default function CropPDF() {
     setDownloadUrl('');
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('inset', inset);
     try {
       const res = await fetch('/api/pdf-tools/crop', {
         method: 'POST',
@@ -42,6 +44,15 @@ export default function CropPDF() {
       <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Crop PDF</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <input type="file" accept="application/pdf" onChange={handleFileChange} className="block w-full" />
+        <label className="block text-sm text-gray-700 dark:text-gray-200">
+          Crop inset (points)
+          <input
+            type="number"
+            value={inset}
+            onChange={e => setInset(e.target.value)}
+            className="mt-1 w-full border rounded px-2 py-1"
+          />
+        </label>
         <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" disabled={loading}>
           {loading ? 'Processing...' : 'Crop PDF'}
         </button>

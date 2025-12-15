@@ -32,14 +32,31 @@ router.post('/split', upload.single('file'), async (req, res) => {
   try {
     const file = req.file;
     if (!file) return res.status(400).json({ error: 'No PDF uploaded.' });
+    const pagesStr = req.body.pages || '';
     const pdfBytes = fs.readFileSync(file.path);
     const pdfDoc = await PDFDocument.load(pdfBytes);
-    const totalPages = pdfDoc.getPageCount();
-    if (totalPages < 2) return res.status(400).json({ error: 'PDF must have at least 2 pages to split.' });
-    // Split first page as demo
+    const total = pdfDoc.getPageCount();
+    const indices = pagesStr
+      .split(',')
+      .map(p => p.trim())
+      .filter(Boolean)
+      .flatMap(part => {
+        if (part.includes('-')) {
+          const [a, b] = part.split('-').map(n => parseInt(n, 10) - 1);
+          if (Number.isInteger(a) && Number.isInteger(b)) {
+            const start = Math.max(Math.min(a, b), 0);
+            const end = Math.min(Math.max(a, b), total - 1);
+            return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+          }
+        }
+        const idx = parseInt(part, 10) - 1;
+        return Number.isInteger(idx) && idx >= 0 && idx < total ? [idx] : [];
+      });
+    const unique = Array.from(new Set(indices)).sort((a, b) => a - b);
+    if (!unique.length) return res.status(400).json({ error: 'No valid pages specified.' });
     const newPdf = await PDFDocument.create();
-    const [copiedPage] = await newPdf.copyPages(pdfDoc, [0]);
-    newPdf.addPage(copiedPage);
+    const copied = await newPdf.copyPages(pdfDoc, unique);
+    copied.forEach(p => newPdf.addPage(p));
     const splitBytes = await newPdf.save();
     const outPath = path.join(__dirname, '../uploads', `split-${Date.now()}.pdf`);
     fs.writeFileSync(outPath, splitBytes);
