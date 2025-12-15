@@ -3,6 +3,7 @@ const multer = require('multer');
 const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
+const { exec } = require('child_process');
 const { PDFDocument } = require('pdf-lib');
 const router = express.Router();
 
@@ -12,6 +13,23 @@ const FALLBACK_DIR = path.join(__dirname, '../uploads');
 const WORK_DIR = fs.existsSync(TMP_DIR) ? TMP_DIR : FALLBACK_DIR;
 
 const upload = multer({ dest: WORK_DIR });
+const IMAGE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const DOC_MIME_TYPES = new Set([
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-powerpoint',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+]);
+
+function isImage(file) {
+  return IMAGE_MIME_TYPES.has(file.mimetype);
+}
+
+function isDoc(file) {
+  return DOC_MIME_TYPES.has(file.mimetype);
+}
 
 // POST /api/pdf/convert
 
@@ -27,18 +45,42 @@ router.post('/convert', upload.single('file'), async (req, res) => {
       const text = fs.readFileSync(file.path, 'utf8');
       const page = pdfDoc.addPage();
       page.drawText(text, { x: 50, y: 700, size: 12 });
-    } else if (["image/jpeg", "image/png", "image/webp"].includes(file.mimetype)) {
-      // Image → PDF using sharp for reliable decoding
+      const pdfBytes = await pdfDoc.save();
+      fs.writeFileSync(outPath, pdfBytes);
+    } else if (isImage(file)) {
+      // Image → PDF using sharp for reliable decoding; embed with correct codec
       const { data, info } = await sharp(file.path).rotate().toBuffer({ resolveWithObject: true });
-      const embedded = await pdfDoc.embedPng(data);
+      const embedded = info.format === 'jpeg' ? await pdfDoc.embedJpg(data) : await pdfDoc.embedPng(data);
       const page = pdfDoc.addPage([info.width, info.height]);
       page.drawImage(embedded, { x: 0, y: 0, width: info.width, height: info.height });
+      const pdfBytes = await pdfDoc.save();
+      fs.writeFileSync(outPath, pdfBytes);
+    } else if (isDoc(file)) {
+      // Office docs → PDF via LibreOffice
+      const inputPath = file.path;
+      const cmd = `soffice --headless --convert-to pdf --outdir "${WORK_DIR}" "${inputPath}"`;
+      exec(cmd, (error, stdout, stderr) => {
+        if (error) {
+          console.error('[pdf:convert:soffice] error', stderr || error.message);
+          try { fs.unlinkSync(inputPath); } catch (_) {}
+          return res.status(500).json({ error: 'Office document conversion failed.' });
+        }
+        const tempBase = path.parse(inputPath).name;
+        const outFile = path.join(WORK_DIR, `${tempBase}.pdf`);
+        if (!fs.existsSync(outFile)) {
+          try { fs.unlinkSync(inputPath); } catch (_) {}
+          return res.status(500).json({ error: 'Office document conversion failed.' });
+        }
+        return res.download(outFile, `${path.parse(file.originalname).name}.pdf`, err => {
+          if (err) console.error('[pdf:download] failed', err);
+          try { fs.unlinkSync(inputPath); } catch (_) {}
+          try { fs.unlinkSync(outFile); } catch (_) {}
+        });
+      });
+      return; // response handled in callback
     } else {
-      return res.status(400).json({ error: 'Conversion for this file type not implemented.' });
+      return res.status(400).json({ error: 'Unsupported file type for PDF conversion.' });
     }
-
-    const pdfBytes = await pdfDoc.save();
-    fs.writeFileSync(outPath, pdfBytes);
 
     res.download(outPath, `${path.parse(file.originalname).name}.pdf`, err => {
       if (err) {
