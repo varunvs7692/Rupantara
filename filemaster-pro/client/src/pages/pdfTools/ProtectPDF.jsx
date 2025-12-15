@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 export default function ProtectPDF() {
   const [file, setFile] = useState(null);
+  const [password, setPassword] = useState('');
   const [downloadUrl, setDownloadUrl] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,6 +20,7 @@ export default function ProtectPDF() {
     setDownloadUrl('');
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('password', password);
     try {
       const res = await fetch('/api/pdf-tools/protect', {
         method: 'POST',
@@ -42,6 +44,14 @@ export default function ProtectPDF() {
       <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Protect PDF</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <input type="file" accept="application/pdf" onChange={handleFileChange} className="block w-full" />
+        <input
+          type="password"
+          placeholder="Set password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          className="block w-full border rounded px-3 py-2"
+          required
+        />
         <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" disabled={loading}>
           {loading ? 'Processing...' : 'Protect PDF'}
         </button>
