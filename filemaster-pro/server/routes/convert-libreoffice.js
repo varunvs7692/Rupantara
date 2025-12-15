@@ -23,14 +23,14 @@ router.post('/', upload.single('file'), async (req, res) => {
         fs.unlinkSync(inputPath);
         return res.status(500).json({ error: stderr || error.message });
       }
-      // Find the output file
-      const base = path.parse(file.originalname).name;
-      const outFile = path.join(outputDir, `${base}.${target}`);
+      // LibreOffice names the output after the input basename (the temp upload name)
+      const tempBase = path.parse(inputPath).name;
+      const outFile = path.join(outputDir, `${tempBase}.${target}`);
       if (!fs.existsSync(outFile)) {
         fs.unlinkSync(inputPath);
         return res.status(500).json({ error: 'Conversion failed.' });
       }
-      res.download(outFile, `${base}.${target}`, () => {
+      res.download(outFile, `${path.parse(file.originalname).name}.${target}`, () => {
         fs.unlinkSync(inputPath);
         fs.unlinkSync(outFile);
       });
