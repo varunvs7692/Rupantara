@@ -18,9 +18,16 @@ export default function PDFConverter() {
     setProgress(10);
     const formData = new FormData();
     formData.append('file', file);
+    const officeTypes = [
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+    ];
+    const isOffice = officeTypes.includes(file.type);
+    if (isOffice) formData.append('target', 'pdf');
     try {
       setProgress(30);
-      const res = await fetch('/api/pdf/convert', {
+      const endpoint = isOffice ? '/api/convert-libreoffice' : '/api/pdf/convert';
+      const res = await fetch(endpoint, {
         method: 'POST',
         body: formData
       });
